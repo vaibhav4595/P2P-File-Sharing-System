@@ -1,0 +1,32 @@
+PROTOCOL
+--------
+DOWNLOAD FILE workflow -
+First, the client(in this process) opens a connection with the control port of the other computer(server in this function).
+The server is now waiting for the request as per the design of the app and then we send it a download initiate request, design specified below.
+On receiving this, the server responds with an acknowledgement and starts to write the file.
+The acknowledgement packet contains filename, filesize and the hash of the file.
+
+Request packet formats,
+For now, we're assigning 8bits for the type or request, we're representing these 8 bits in ASCII character **for now**
+1) Download Request Packet
+    a) 1 byte: flag to indicate that it is a download request. set to 'd'
+    b) 1 byte: type to indicate if ask or respond. options 'a'sk or 'r'espond.
+    c) 100 byte: filename followed by null padding. [request]
+    d) 100 byte: Size of file. Next 100 bytes contain the size of the file, followed by null padding [response]
+    e) 32 byte: MD5 hash. [response]
+    |   flag   |   type  | filename |   size   |    MD5   |
+    |  1 byte  |  1 byte | 100 byte | 100 byte |  32 byte |
+
+2) Upload Request Packet
+    a) 1 byte: flag to indicate that it is an upload request. set to 'u'
+    b) 100 byte: filename followed by null padding. 
+    |   flag  |  filename  |
+    |  1 byte |  100 byte  |
+    After the upload request is sent, the receiver just sends back a download request with the filename, this way, we reuse that code and don't need any new protocol.
+    RESPONSE
+    Receiver of the upload ask packet replies with a download request. So all we need to do is fire this packet and the other end should take care of everything.
+
+3) File List Request Packet
+    The current idea behind file list is that we just send a packet which requests the file list and start writing all the response to sdtout.
+    a) 1 byte: flag to indicate that it is a file list request. set to 'f'
+    b) 100 byte: string that needs to be sent to parsecommand function, that'll handle splitting and stff so that we can call the get_file_list function.
